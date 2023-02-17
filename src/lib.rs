@@ -17,6 +17,7 @@ pub struct FS3000<I2C> {
 impl<I2C, E> FS3000<I2C>
 where
     I2C: i2c::WriteRead<Error = E> + i2c::Write<Error = E> + i2c::Read<Error = E>,
+    E: core::fmt::Debug,
 {
     pub fn new(i2c: I2C, address: DeviceAddr, subtype: ChipType) -> Result<Self, E> {
         Ok(Self {
@@ -39,6 +40,11 @@ where
         Ok(data)
     }
 
+    pub fn get_counts(&mut self) -> u16 {
+        let data = self.get_raw_velocity();
+        let result = get_counts(data.unwrap());
+        result
+    }
     fn calculate_checksum(&mut self, rawdata: RawData) -> bool {
         let sum = rawdata.data_high
             + rawdata.data_low
@@ -72,5 +78,7 @@ pub struct RawData {
     generic_checksum_2: u8,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct AirVelocity(f32);
+pub fn get_counts(rawdata: RawData) -> u16 {
+    let result = u16::from_be_bytes([rawdata.data_high, rawdata.data_low]);
+    result
+}
