@@ -16,7 +16,7 @@ pub struct FS3000<I2C> {
 
 impl<I2C, E> FS3000<I2C>
 where
-    I2C: i2c::WriteRead<Error = E> + i2c::Write<Error = E>,
+    I2C: i2c::WriteRead<Error = E> + i2c::Write<Error = E> + i2c::Read<Error = E>,
 {
     pub fn new(i2c: I2C, address: DeviceAddr, subtype: ChipType) -> Result<Self, E> {
         Ok(Self {
@@ -25,9 +25,34 @@ where
             subtype,
         })
     }
+
+    pub fn get_raw_velocity(&mut self) -> Result<RawData, E> {
+        let mut buffer = [0u8; 5];
+        self.i2c.read(self.address as u8, &mut buffer)?;
+        let data = RawData {
+            checksum: buffer[0],
+            data_high: buffer[1],
+            data_low: buffer[2],
+            generic_checksum_1: buffer[3],
+            generic_checksum_2: buffer[4],
+        };
+        Ok(data)
+    }
+
+    fn calculate_checksum(&mut self, rawdata: RawData) -> bool {
+        let sum = rawdata.data_high
+            + rawdata.data_low
+            + rawdata.generic_checksum_1
+            + rawdata.generic_checksum_2;
+        let checksum_result = sum + rawdata.checksum;
+        match checksum_result {
+            0x00u8 => true,
+            _ => false,
+        }
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum DeviceAddr {
     Default = 0x28,
 }
@@ -37,3 +62,15 @@ pub enum ChipType {
     Type1005,
     Type1015,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RawData {
+    checksum: u8,
+    data_high: u8,
+    data_low: u8,
+    generic_checksum_1: u8,
+    generic_checksum_2: u8,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct AirVelocity(f32);
