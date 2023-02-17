@@ -45,6 +45,13 @@ where
         let result = get_counts(data.unwrap());
         result
     }
+
+    pub fn debug_values(&mut self) -> [u8; 2] {
+        let data = self.get_raw_velocity();
+        let result = data.unwrap();
+        let values = [result.data_high, result.data_low];
+        values
+    }
     fn calculate_checksum(&mut self, rawdata: RawData) -> bool {
         let sum = rawdata.data_high
             + rawdata.data_low
