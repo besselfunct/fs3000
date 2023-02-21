@@ -16,8 +16,7 @@ pub struct FS3000<I2C> {
 
 impl<I2C, E> FS3000<I2C>
 where
-    I2C: i2c::WriteRead<Error = E> + i2c::Write<Error = E> + i2c::Read<Error = E>,
-    E: core::fmt::Debug,
+    I2C: i2c::Read<Error = E>, E: core::fmt::Debug
 {
     pub fn new(i2c: I2C, address: DeviceAddr, subtype: ChipType) -> Result<Self, E> {
         Ok(Self {
