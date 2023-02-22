@@ -17,7 +17,8 @@ pub struct FS3000<I2C> {
 
 impl<I2C, E> FS3000<I2C>
 where
-    I2C: i2c::Read<Error = E>, E: core::fmt::Debug
+    I2C: i2c::Read<Error = E>,
+    E: core::fmt::Debug,
 {
     pub fn new(i2c: I2C, address: DeviceAddr, subtype: ChipType) -> Result<Self, E> {
         Ok(Self {
@@ -48,14 +49,21 @@ where
     pub fn debug_values(&mut self) -> [u8; 5] {
         let data = self.get_raw_velocity();
         let result = data.unwrap();
-        [result.checksum,result.data_high, result.data_low, result.generic_checksum_1, result.generic_checksum_2]
+        [
+            result.checksum,
+            result.data_high,
+            result.data_low,
+            result.generic_checksum_1,
+            result.generic_checksum_2,
+        ]
     }
+    #[allow(unused)]
     fn calculate_checksum(&mut self, rawdata: RawData) -> bool {
         let sum = rawdata.data_high
             + rawdata.data_low
             + rawdata.generic_checksum_1
             + rawdata.generic_checksum_2;
-        let checksum_result = u8::wrapping_add(sum,rawdata.checksum);
+        let checksum_result = u8::wrapping_add(sum, rawdata.checksum);
         if checksum_result == 0 {
             true
         } else {
@@ -63,7 +71,7 @@ where
         }
     }
     #[allow(unused)]
-    fn get_measurement(&mut self) -> f32 {
+    pub fn get_measurement(&mut self) -> f32 {
         let counts = self.get_counts();
         match &self.subtype {
             ChipType::Type1005 => interp(&counts_1005, &mps_1005, counts as f32),
@@ -97,7 +105,14 @@ pub fn get_counts(rawdata: RawData) -> u16 {
     result
 }
 
-const counts_1005: [f32;9] = [409.0, 915.0, 1522.0, 2066.0, 2523.0, 2908.0, 3256.0, 3572.0, 3686.0];
-const mps_1005: [f32;9] = [0.0, 1.07, 2.01, 3.00, 3.97, 4.96, 5.98, 6.99, 7.23];
-const counts_1015: [f32;13] = [409.0, 1203.0, 1597.0, 1908.0, 2187.0, 2400.0, 2629.0, 2801.0, 3006.0, 3178.0, 3309.0, 3563.0, 3686.0];
-const mps_1015: [f32;13] = [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 15.0];
+const counts_1005: [f32; 9] = [
+    409.0, 915.0, 1522.0, 2066.0, 2523.0, 2908.0, 3256.0, 3572.0, 3686.0,
+];
+const mps_1005: [f32; 9] = [0.0, 1.07, 2.01, 3.00, 3.97, 4.96, 5.98, 6.99, 7.23];
+const counts_1015: [f32; 13] = [
+    409.0, 1203.0, 1597.0, 1908.0, 2187.0, 2400.0, 2629.0, 2801.0, 3006.0, 3178.0, 3309.0, 3563.0,
+    3686.0,
+];
+const mps_1015: [f32; 13] = [
+    0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 15.0,
+];
