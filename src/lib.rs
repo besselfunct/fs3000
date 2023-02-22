@@ -2,6 +2,7 @@
 #![no_std]
 
 use embedded_hal::blocking::i2c;
+use interp::interp;
 
 #[derive(Debug)]
 pub struct FS3000<I2C> {
@@ -41,25 +42,32 @@ where
 
     pub fn get_counts(&mut self) -> u16 {
         let data = self.get_raw_velocity();
-        let result = get_counts(data.unwrap());
-        result
+        get_counts(data.unwrap())
     }
 
-    pub fn debug_values(&mut self) -> [u8; 2] {
+    pub fn debug_values(&mut self) -> [u8; 5] {
         let data = self.get_raw_velocity();
         let result = data.unwrap();
-        let values = [result.data_high, result.data_low];
-        values
+        [result.checksum,result.data_high, result.data_low, result.generic_checksum_1, result.generic_checksum_2]
     }
     fn calculate_checksum(&mut self, rawdata: RawData) -> bool {
         let sum = rawdata.data_high
             + rawdata.data_low
             + rawdata.generic_checksum_1
             + rawdata.generic_checksum_2;
-        let checksum_result = sum + rawdata.checksum;
-        match checksum_result {
-            0x00u8 => true,
-            _ => false,
+        let checksum_result = u8::wrapping_add(sum,rawdata.checksum);
+        if checksum_result == 0 {
+            true
+        } else {
+            false
+        }
+    }
+    #[allow(unused)]
+    fn get_measurement(&mut self) -> f32 {
+        let counts = self.get_counts();
+        match &self.subtype {
+            ChipType::Type1005 => interp(&counts_1005, &mps_1005, counts as f32),
+            ChipType::Type1015 => interp(&counts_1015, &mps_1015, counts as f32),
         }
     }
 }
@@ -77,14 +85,19 @@ pub enum ChipType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawData {
-    checksum: u8,
-    data_high: u8,
-    data_low: u8,
-    generic_checksum_1: u8,
-    generic_checksum_2: u8,
+    pub checksum: u8,
+    pub data_high: u8,
+    pub data_low: u8,
+    pub generic_checksum_1: u8,
+    pub generic_checksum_2: u8,
 }
 
 pub fn get_counts(rawdata: RawData) -> u16 {
     let result = u16::from_be_bytes([rawdata.data_high, rawdata.data_low]);
     result
 }
+
+const counts_1005: [f32;9] = [409.0, 915.0, 1522.0, 2066.0, 2523.0, 2908.0, 3256.0, 3572.0, 3686.0];
+const mps_1005: [f32;9] = [0.0, 1.07, 2.01, 3.00, 3.97, 4.96, 5.98, 6.99, 7.23];
+const counts_1015: [f32;13] = [409.0, 1203.0, 1597.0, 1908.0, 2187.0, 2400.0, 2629.0, 2801.0, 3006.0, 3178.0, 3309.0, 3563.0, 3686.0];
+const mps_1015: [f32;13] = [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 15.0];
