@@ -2,6 +2,11 @@
 name = "fs3000"
 version = "0.1.0"
 edition = "2021"
+description = "Basic embedded-hal-based I2C driver for the FS3000-1005 and FS3000-1015 air velocity sensors"
+repository = "https://github.com/besselfunct/fs3000"
+license = "MIT"
+keywords = ["air-velocity","I2C","embedded"]
+categories = ["embedded"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
