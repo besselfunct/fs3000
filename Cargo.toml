@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 embedded-hal = "0.2.7"
-bitvec = "1"
 interp = "1"

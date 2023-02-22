@@ -74,8 +74,8 @@ where
     pub fn get_measurement(&mut self) -> f32 {
         let counts = self.get_counts();
         match &self.subtype {
-            ChipType::Type1005 => interp(&counts_1005, &mps_1005, counts as f32),
-            ChipType::Type1015 => interp(&counts_1015, &mps_1015, counts as f32),
+            ChipType::Type1005 => interp(&COUNTS_1005, &MPS_1005, counts as f32),
+            ChipType::Type1015 => interp(&COUNTS_1015, &MPS_1015, counts as f32),
         }
     }
 }
@@ -105,14 +105,14 @@ pub fn get_counts(rawdata: RawData) -> u16 {
     result
 }
 
-const counts_1005: [f32; 9] = [
+const COUNTS_1005: [f32; 9] = [
     409.0, 915.0, 1522.0, 2066.0, 2523.0, 2908.0, 3256.0, 3572.0, 3686.0,
 ];
-const mps_1005: [f32; 9] = [0.0, 1.07, 2.01, 3.00, 3.97, 4.96, 5.98, 6.99, 7.23];
-const counts_1015: [f32; 13] = [
+const MPS_1005: [f32; 9] = [0.0, 1.07, 2.01, 3.00, 3.97, 4.96, 5.98, 6.99, 7.23];
+const COUNTS_1015: [f32; 13] = [
     409.0, 1203.0, 1597.0, 1908.0, 2187.0, 2400.0, 2629.0, 2801.0, 3006.0, 3178.0, 3309.0, 3563.0,
     3686.0,
 ];
-const mps_1015: [f32; 13] = [
+const MPS_1015: [f32; 13] = [
     0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 15.0,
 ];
